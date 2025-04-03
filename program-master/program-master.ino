@@ -48,12 +48,6 @@
 #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SmallCap4x6.h>
 #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/EMSans6x16.h>
 
-// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/KecNumber.h>
-// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/BigNumber.h>
-// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/Font4x6.h>
-// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SystemFont5x7.h>
-// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/Font3x5.h>
-
 
 #define BUZZ  4//D4 // PIN BUZZER
 
@@ -68,15 +62,14 @@
 
 // Ukuran EEPROM (pastikan cukup untuk semua data)
 #define EEPROM_SIZE 50
-//#include "icon.h"
 
 //create object
 RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime now;
 double times[sizeof(TimeName)/sizeof(char*)];
 
-uint8_t maxday[]            = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-uint8_t ihtiSholat[]        = {0,0,0,0,0};
+uint8_t maxday[]        = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+uint8_t ihtiSholat[]    = {0,0,0,0,0};
 uint8_t iqomah[]        = {5,1,5,5,5,2,5};
 uint8_t displayBlink[]  = {5,0,5,5,5,5,5};
 uint8_t dataIhty[]      = {3,0,3,3,0,3,2};
@@ -160,10 +153,8 @@ uint8_t     speedText2    = 40;
 float dataFloat[10];
 int   dataInteger[10];
 uint8_t indexText;
-bool flagClock=false;
-bool flagText=false;
-bool flagUpdate=false;
-/*==============================*/
+
+/*============== end ================*/
 
 enum Show{
   ANIM_INFO,
@@ -317,9 +308,29 @@ for(int i = 0; i < 4; i++)
 }
 
 void loop() {
-  
+  getData();
 
 }
+
+void getData(){
+  if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        
+        int eq = input.indexOf('=');
+        if (eq != -1) {
+            String key = input.substring(0, eq);
+            String value = input.substring(eq + 1);
+            
+            if (key == "setJam") jam = value;
+            else if (key == "tanggal") tanggal = value;
+            else if (key == "br") brightness = value.toInt();
+            else if (key == "text") text = value;
+        }
+        
+    }
+}
+
 
 // PARAMETER PENGHITUNGAN JADWAL SHOLAT
 void JadwalSholat() {

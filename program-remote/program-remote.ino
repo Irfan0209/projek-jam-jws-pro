@@ -23,10 +23,9 @@ const char* host = "OTA-PANEL";
 
 ESP8266WebServer server(80);
 
-
-  IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
-  IPAddress gateway(192, 168, 2, 1);       // Gateway
-  IPAddress subnet(255, 255, 255, 0);      // Subnet mask
+IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
+IPAddress gateway(192, 168, 2, 1);       // Gateway
+IPAddress subnet(255, 255, 255, 0);      // Subnet mask
 
 void AP_init() {
     WiFi.mode(WIFI_AP);
@@ -38,6 +37,9 @@ void AP_init() {
     Serial.print("AP IP address: ");
     Serial.println(myIP);
     
+    server.on("/setTime", handleSetTime);
+    server.begin();
+
     ArduinoOTA.setHostname(host);
      ArduinoOTA.onStart([]() {
       String type;
@@ -75,7 +77,7 @@ void AP_init() {
     Serial.println("Server dimulai.");  
   }
 
-  void handleSetTime() {
+void handleSetTime() {
   Serial.println("hansle run");
   
   Buzzer(1);
@@ -85,105 +87,103 @@ void AP_init() {
   }
   
   if (server.hasArg("Tm")) {//jam
-    setJam = server.arg("Tm"); 
-    //Serial.println("setJam:"+String(setJam));
-    flagClock = true;
+    String setJam = server.arg("Tm"); 
+    Serial.println("Tm=" + setJam);
     
    // server.send(200, "text/plain", "Settingan jam berhasil diupdate");
   } 
 
   if (server.hasArg("text")) {
-    setText = server.arg("text"); 
-    flagText = true;
-    
-    
+    String setText = server.arg("text"); 
+    Serial.println("text=" + setText);
+
     //saveStringToEEPROM(66, dynamicText);
    // server.send(200, "text/plain", "Settingan nama berhasil diupdate");
   }
   
  if (server.hasArg("Br")) {
-   int input  = server.arg("Br").toInt(); 
-   brightness = map(input,0,100,10,255);
-  
-   //Serial.println(String()+"brightness:"+brightness);
-   Disp.setBrightness(brightness);
-   //EEPROM.put(0, brightness);
+   uint8_t input  = server.arg("Br").toInt(); 
+   uint8_t brightness = map(input,0,100,10,255);
+   Serial.println("Br="+String(brightness));
+
    server.send(200, "text/plain", "Kecerahan berhasil diupdate");
  }
  
  if (server.hasArg("Sptx")) {
-   int input = server.arg("Sptx").toInt(); // Atur kecepatan text
-   speedText =  map(input,0,100,10,80);
- //  Serial.println(String()+"speedText:"+speedText);
+   uint8_t input = server.arg("Sptx").toInt(); // Atur kecepatan text
+   uint8_t speedText =  map(input,0,100,10,80);
+
+   Serial.println("Sptx="+String(speedText));
    //EEPROM.put(8, speedText);
    server.send(200, "text/plain", "Kecepatan nama berhasil diupdate");
  }
 
  if (server.hasArg("Spdt")) {
-   int input = server.arg("Spdt").toInt(); // Atur kecepatan text
-   speedDate =  map(input,0,100,10,80);
- //  Serial.println(String()+"speedDate:"+speedDate);
+   uint8_t input = server.arg("Spdt").toInt(); // Atur kecepatan text
+   uint8_t speedDate =  map(input,0,100,10,80);
+   Serial.println("Spdt="+String(speedDate));
    //EEPROM.put(8, speedDate);
    server.send(200, "text/plain", "Kecepatan tanggal berhasil diupdate");
  }
 
  if (server.hasArg("Lk")) {
    String data = server.arg("Lk"); 
-   //Serial.print(String()+"data:"+data);
-   parsingData(data);
-   flag=1;
+   Serial.print("Lk="+String(data));
+   //parsingData(data);
+   //flag=1;
  }
 
  if (server.hasArg("Iq")) { //iqomah
-   String data = server.arg("Iq"); 
-    // Mencari posisi tanda "-"
-   int separatorIndex = data.indexOf('-');
+   uint8_t data = server.arg("Iq").toInt(); 
+  //   // Mencari posisi tanda "-"
+  //  int separatorIndex = data.indexOf('-');
 
-   // Memisahkan angka pertama
-   int indexSholat = data.substring(0, separatorIndex).toInt();
+  //  // Memisahkan angka pertama
+  //  int indexSholat = data.substring(0, separatorIndex).toInt();
 
-   // Memisahkan angka kedua
-   int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
-   iqomah[indexSholat]=indexKoreksi;
-   Serial.println(String()+"iqomah:"+iqomah[indexSholat]=indexKoreksi);
+  //  // Memisahkan angka kedua
+  //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
+  //  iqomah[indexSholat]=indexKoreksi;
+   Serial.println("Iq=" + String(data));
  }           
 
  if (server.hasArg("Dy")) { //display off
-   String data = server.arg("Dy"); 
+   uint8_t data = server.arg("Dy").toInt(); ; 
     // Mencari posisi tanda "-"
-   int separatorIndex = data.indexOf('-');
+  //  int separatorIndex = data.indexOf('-');
 
-   // Memisahkan angka pertama
-   int indexSholat = data.substring(0, separatorIndex).toInt();
+  //  // Memisahkan angka pertama
+  //  int indexSholat = data.substring(0, separatorIndex).toInt();
 
-   // Memisahkan angka kedua
-   int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
-   displayBlink[indexSholat]=indexKoreksi;
-   Serial.println(String()+"dislayoff:"+displayBlink[indexSholat]=indexKoreksi);
+  //  // Memisahkan angka kedua
+  //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
+  //  displayBlink[indexSholat]=indexKoreksi;
+   Serial.println("Dy=" + String(data));
  }        
 
  if (server.hasArg("Kr")) { //koreksi jadwal
-   String data = server.arg("Kr"); 
-    // Mencari posisi tanda "-"
-   int separatorIndex = data.indexOf('-');
+   uint8_t data = server.arg("Kr").toInt(); ; 
+  //   // Mencari posisi tanda "-"
+  //  int separatorIndex = data.indexOf('-');
 
-   // Memisahkan angka pertama
-   int indexSholat = data.substring(0, separatorIndex).toInt();
+  //  // Memisahkan angka pertama
+  //  int indexSholat = data.substring(0, separatorIndex).toInt();
 
-   // Memisahkan angka kedua
-   int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
-   dataIhty[indexSholat]=indexKoreksi;
-   Serial.println(String()+"koreksijadwal:"+dataIhty[indexSholat]=indexKoreksi);
+  //  // Memisahkan angka kedua
+  //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
+  //  dataIhty[indexSholat]=indexKoreksi;
+   Serial.println("Kr=" + String(data));
  }        
 
  
  
  if (server.hasArg("Bzr")) {
-   stateBuzzer = server.arg("Bzr").toInt(); // Atur status buzzer
-   //Serial.println(String()+"stateBuzzer:"+stateBuzzer);
+   uint8_t stateBuzzer = server.arg("Bzr").toInt(); // Atur status buzzer
+   Serial.println("Bzr="+String(stateBuzzer));
    //EEPROM.put(52, stateBuzzer);
-   server.send(200, "text/plain", (stateBuzzer)?"Suara Diaktifkan":"Suara Dimatikan");
+   //server.send(200, "text/plain", (stateBuzzer)?"Suara Diaktifkan":"Suara Dimatikan");
  }
+
  if (server.hasArg("status")) {
    server.send(200, "text/plain", "CONNECTED");
  }
@@ -191,20 +191,16 @@ void AP_init() {
  if (server.hasArg("newPassword")) {
    String newPassword = server.arg("newPassword");
    if(newPassword.length()==8){
-     Serial.println(String()+"newPassword:"+newPassword);
+     Serial.println("newPassword="+newPassword);
      newPassword.toCharArray(password, newPassword.length() + 1); // Set password baru
      //saveStringToEEPROM(56, password); // Simpan password AP
      server.send(200, "text/plain", "Password WiFi diupdate");
    }else{ Buzzer(2); Serial.println("panjang password melebihi 8 karakter"); }
   } 
-   write the data to EEPROM
+   //write the data to EEPROM
   boolean ok1 = EEPROM.commit();
   Serial.println((ok1) ? "First commit OK" : "Commit failed");
   
-  //delay(50);
-  (stateBuzzer==1)?Buzzer(0) : digitalWrite(BUZZ,HIGH);
-  
-  //server.send(200, "text/plain", "Pengaturan berhasil diupdate dan disimpan ke EEPROM!");
 }
 
 
@@ -214,6 +210,27 @@ void setup() {
 }
 
 void loop() {
-  
+  server.handleClient(); // Menangani permintaan dari MIT App Inventor
 
 }
+void Buzzer(uint8_t state)
+  {
+    //if(!stateBuzzer) return;
+    
+    // switch(state){
+    //   case 0 :
+    //     digitalWrite(BUZZ,HIGH);
+    //   break;
+    //   case 1 :
+    //     digitalWrite(BUZZ,LOW);
+    //   break;
+    //   case 2 :
+    //     for(int i = 0; i < 2; i++){
+    //       digitalWrite(BUZZ,LOW);
+    //       delay(80);
+    //       digitalWrite(BUZZ,HIGH);
+    //       delay(80);
+    //     }
+    //   break;
+    // };
+  }
