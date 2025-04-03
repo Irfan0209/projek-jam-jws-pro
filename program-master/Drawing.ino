@@ -1,3 +1,20 @@
+const char msg[] PROGMEM = "MUSHOLLAH HIDAYATULLAH RT19/RW03,DODOKAN,TANJUNGSARI";
+const char * const pasar[] PROGMEM = {"WAGE", "KLIWON", "LEGI", "PAHING", "PON"}; 
+const char * const Hari[] PROGMEM = {"AHAD","SENIN","SELASA","RABU","KAMIS","JUM'AT","SABTU"};
+const char * const bulanMasehi[] PROGMEM = {"JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER" };
+const char msg1[] PROGMEM ="LURUSKAN DAN RAPATKAN SHAFF SHOLAT";
+const char * const namaBulanHijriah[] PROGMEM = {
+    "MUHARRAM", "SHAFAR", "RABIUL AWAL",
+    "RABIUL AKHIR", "JUMADIL AWAL", 
+    "JUMADIL AKHIR", "RAJAB",
+    "SYA'BAN", "RAMADHAN", "SYAWAL",
+    "DZULQA'DAH", "DZULHIJAH"
+};
+const char jadwal[][8] PROGMEM = {
+    "SUBUH ", "TERBIT ", "DZUHUR ", "ASHAR ", 
+    "TRBNM ", "MAGRIB ", "ISYA' "
+  };
+
 
 //================= tampilan animasi ==================//
 

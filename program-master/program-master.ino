@@ -1,11 +1,39 @@
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
 
-#include <DMDESP.h>
+#if defined(ESP8266) || defined(ESP32)  // Jika menggunakan ESP8266 atau ESP32
+  #include <ESP8266WiFi.h>
+  #include <ESP8266WebServer.h>
+  #include <ESP8266mDNS.h>
+  #include <WiFiUdp.h>
+  #include <ArduinoOTA.h>
+  
+  #include <DMDESP.h>
+  #include <ESP_EEPROM.h>
+
+  DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
+  
+// Pengaturan hotspot WiFi dari ESP8266
+  char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
+  char password[20] = "00000000";
+  const char* host = "OTA-PANEL";
+
+  ESP8266WebServer server(80);
+
+#else
+  #include <SPI.h>
+  #include <DMD3asis.h>
+  #include <avr/pgmspace.h>
+  #include <MemoryFree.h>
+  DMD3 Disp(2,1);
+  
+
+
+#endif
+
+
 
 #include <Wire.h>
 #include <RtcDS3231.h>
-#include <ESP_EEPROM.h>
+
 
 #include "PrayerTimes.h"
 
@@ -38,9 +66,7 @@
 
 //create object
 RtcDS3231<TwoWire> Rtc(Wire);
-DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
 RtcDateTime now;
-ESP8266WebServer server(80);
 double times[sizeof(TimeName)/sizeof(char*)];
 
 uint8_t maxday[]            = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -98,10 +124,7 @@ TanggalJawa tanggalJawa;
 JamDanMenit waktuMagrib;
 Config config;
 
-// Pengaturan hotspot WiFi dari ESP8266
- char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
- char password[20] = "00000000";
- const char* host = "OTA-PANEL";
+
 
 // Variabel untuk waktu, tanggal, teks berjalan, tampilan ,dan kecerahan
 String setJam        = "00:00:00";
@@ -149,10 +172,8 @@ enum Show{
 
 Show show = ANIM_JAM;
 
-IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
-IPAddress gateway(192, 168, 2, 1);       // Gateway
-IPAddress subnet(255, 255, 255, 0);      // Subnet mask
 
+#if defined(ESP8266) || defined(ESP32)
 //----------------------------------------------------------------------
 // HJS589 P10 FUNGSI TAMBAHAN UNTUK NODEMCU ESP8266
 
@@ -174,9 +195,13 @@ void Disp_init() {
   interrupts();
 }
 
+IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
+IPAddress gateway(192, 168, 2, 1);       // Gateway
+IPAddress subnet(255, 255, 255, 0);      // Subnet mask
+
 void AP_init() {
   WiFi.mode(WIFI_AP);
-  //WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAPConfig(local_IP, gateway, subnet);
   WiFi.softAP(ssid);
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
 
@@ -184,7 +209,6 @@ void AP_init() {
   Serial.print("AP IP address: ");
   Serial.println(myIP);
   
-  /*
   ArduinoOTA.setHostname(host);
    ArduinoOTA.onStart([]() {
     String type;
@@ -217,14 +241,32 @@ void AP_init() {
       Serial.println("End Failed");
     }
   });
-  //ArduinoOTA.begin();
-  server.on("/setPanel", handleSetTime);
-  server.begin();
-  */
+  ArduinoOTA.begin();
   
   Serial.println("Server dimulai.");  
 }
+#else
+  // =========================================
+  // DMD3 P10 utility Function================
+  // =========================================
+  void Disp_init() 
+   { 
+      Disp.setDoubleBuffer(true);
+      Timer1.initialize(1500);
+      Timer1.attachInterrupt(scan);
+      setBrightness(200);
+      fType(1);  
+      Disp.clear();
+      Disp.swapBuffers();
+   }
 
+  void setBrightness(int bright)
+    { Timer1.pwm(9,bright);}
+
+  void scan()
+    { Disp.refresh();}
+  
+#endif
 
 void setup() {
   // put your setup code here, to run once:
@@ -235,3 +277,113 @@ void loop() {
   // put your main code here, to run repeatedly:
 
 }
+
+// PARAMETER PENGHITUNGAN JADWAL SHOLAT
+
+void JadwalSholat() {
+  
+  RtcDateTime now = Rtc.GetDateTime();
+
+  int tahun = now.Year();
+  int bulan = now.Month();
+  int tanggal = now.Day();
+
+  Serial.println("calcualat run");
+  set_calc_method(Karachi);
+  set_asr_method(Shafii);
+  set_high_lats_adjust_method(AngleBased);
+  set_fajr_angle(20);
+  set_isha_angle(18);
+
+  get_prayer_times(tahun, bulan, tanggal, config.latitude, config.longitude, config.zonawaktu, times);
+ //yield();
+}
+
+ //----------------------------------------------------------------------
+// I2C_ClearBus menghindari gagal baca RTC (nilai 00 atau 165)
+
+int I2C_ClearBus() {
+  
+#if defined(TWCR) && defined(TWEN)
+  TWCR &= ~(_BV(TWEN)); //Disable the Atmel 2-Wire interface so we can control the SDA and SCL pins directly
+#endif
+
+  pinMode(SDA, INPUT_PULLUP); // Make SDA (data) and SCL (clock) pins Inputs with pullup.
+  pinMode(SCL, INPUT_PULLUP);
+
+  delay(2500);  // Wait 2.5 secs. This is strictly only necessary on the first power
+  // up of the DS3231 module to allow it to initialize properly,
+  // but is also assists in reliable programming of FioV3 boards as it gives the
+  // IDE a chance to start uploaded the program
+  // before existing sketch confuses the IDE by sending Serial data.
+
+  boolean SCL_LOW = (digitalRead(SCL) == LOW); // Check is SCL is Low.
+  if (SCL_LOW) { //If it is held low Arduno cannot become the I2C master. 
+    return 1; //I2C bus error. Could not clear SCL clock line held low
+  }
+
+  boolean SDA_LOW = (digitalRead(SDA) == LOW);  // vi. Check SDA input.
+  int clockCount = 20; // > 2x9 clock
+
+  while (SDA_LOW && (clockCount > 0)) { //  vii. If SDA is Low,
+    clockCount--;
+  // Note: I2C bus is open collector so do NOT drive SCL or SDA high.
+    pinMode(SCL, INPUT); // release SCL pullup so that when made output it will be LOW
+    pinMode(SCL, OUTPUT); // then clock SCL Low
+    delayMicroseconds(10); //  for >5uS
+    pinMode(SCL, INPUT); // release SCL LOW
+    pinMode(SCL, INPUT_PULLUP); // turn on pullup resistors again
+    // do not force high as slave may be holding it low for clock stretching.
+    delayMicroseconds(10); //  for >5uS
+    // The >5uS is so that even the slowest I2C devices are handled.
+    SCL_LOW = (digitalRead(SCL) == LOW); // Check if SCL is Low.
+    int counter = 20;
+    while (SCL_LOW && (counter > 0)) {  //  loop waiting for SCL to become High only wait 2sec.
+      counter--;
+      delay(100);
+      SCL_LOW = (digitalRead(SCL) == LOW);
+    }
+    if (SCL_LOW) { // still low after 2 sec error
+      return 2; // I2C bus error. Could not clear. SCL clock line held low by slave clock stretch for >2sec
+    }
+    SDA_LOW = (digitalRead(SDA) == LOW); //   and check SDA input again and loop
+  }
+  if (SDA_LOW) { // still low
+    return 3; // I2C bus error. Could not clear. SDA data line held low
+  }
+
+  // else pull SDA line low for Start or Repeated Start
+  pinMode(SDA, INPUT); // remove pullup.
+  pinMode(SDA, OUTPUT);  // and then make it LOW i.e. send an I2C Start or Repeated start control.
+  // When there is only one I2C master a Start or Repeat Start has the same function as a Stop and clears the bus.
+  /// A Repeat Start is a Start occurring after a Start with no intervening Stop.
+  delayMicroseconds(10); // wait >5uS
+  pinMode(SDA, INPUT); // remove output low
+  pinMode(SDA, INPUT_PULLUP); // and make SDA high i.e. send I2C STOP control.
+  delayMicroseconds(10); // x. wait >5uS
+  pinMode(SDA, INPUT); // and reset pins as tri-state inputs which is the default state on reset
+  pinMode(SCL, INPUT);
+  return 0; // all ok
+}
+
+void Buzzer(uint8_t state)
+  {
+    if(!stateBuzzer) return;
+    
+    switch(state){
+      case 0 :
+        digitalWrite(BUZZ,HIGH);
+      break;
+      case 1 :
+        digitalWrite(BUZZ,LOW);
+      break;
+      case 2 :
+        for(int i = 0; i < 2; i++){
+          digitalWrite(BUZZ,LOW);
+          delay(80);
+          digitalWrite(BUZZ,HIGH);
+          delay(80);
+        }
+      break;
+    };
+  }
