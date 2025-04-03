@@ -19,7 +19,7 @@ void islam() {
                   tanggalHijriah, tanggalJawa);
   printKonversi(tanggalMasehi, tanggalHijriah, tanggalJawa);
 
-  yield();
+  //yield();
 }
 
 double get_julian_date(Tanggal tanggal)

@@ -12,7 +12,7 @@ void check() {
 
     if (tmr - lsTmr > 100) {
         lsTmr = tmr;
-        yield();  // Mencegah reset
+        //yield();  // Mencegah reset
 
         get_float_time_parts(times[counter], hours, minutes);
         minutes += dataIhty[counter];

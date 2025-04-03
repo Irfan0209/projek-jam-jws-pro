@@ -1,4 +1,9 @@
 
+
+//SETUP DMD
+#define DISPLAYS_WIDE 2
+#define DISPLAYS_HIGH 2
+
 #if defined(ESP8266) || defined(ESP32)  // Jika menggunakan ESP8266 atau ESP32
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
@@ -11,7 +16,7 @@
 
   DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
   
-// Pengaturan hotspot WiFi dari ESP8266
+  // Pengaturan hotspot WiFi dari ESP8266
   char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
   char password[20] = "00000000";
   const char* host = "OTA-PANEL";
@@ -23,10 +28,9 @@
   #include <DMD3asis.h>
   #include <avr/pgmspace.h>
   #include <MemoryFree.h>
-  DMD3 Disp(2,1);
   
-
-
+  DMD3 Disp(DISPLAYS_WIDE,DISPLAYS_HIGH);
+  
 #endif
 
 
@@ -38,18 +42,20 @@
 #include "PrayerTimes.h"
 
 
-#include <fonts/SystemFont5x7.h>
-#include <fonts/Font4x6.h>
-#include <fonts/System4x7.h>
-#include <fonts/SmallCap4x6.h>
-#include <fonts/EMSans6x16.h>
+#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SystemFont5x7.h>
+#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/Font4x6.h>
+#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/System4x7.h>
+#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SmallCap4x6.h>
+#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/EMSans6x16.h>
+
+// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/KecNumber.h>
+// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/BigNumber.h>
+// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/Font4x6.h>
+// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SystemFont5x7.h>
+// #include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/Font3x5.h>
 
 
-//SETUP DMD
-#define DISPLAYS_WIDE 2
-#define DISPLAYS_HIGH 2
-
-#define BUZZ  D4 // PIN BUZZER
+#define BUZZ  4//D4 // PIN BUZZER
 
 #define Font0 SystemFont5x7
 #define Font1 Font4x6
@@ -174,83 +180,83 @@ Show show = ANIM_JAM;
 
 
 #if defined(ESP8266) || defined(ESP32)
-//----------------------------------------------------------------------
-// HJS589 P10 FUNGSI TAMBAHAN UNTUK NODEMCU ESP8266
-
-void ICACHE_RAM_ATTR refresh() {
-  Disp.refresh();
-  timer0_write(ESP.getCycleCount() + 80000);
-}
-
-void Disp_init() {
-  Disp.start();
-  Disp.clear();
-  Disp.setBrightness(brightness);
-  Serial.println("Setup dmd selesai");
-
-  noInterrupts();
-  timer0_isr_init();
-  timer0_attachInterrupt(refresh);
-  timer0_write(ESP.getCycleCount() + 80000);
-  interrupts();
-}
-
-IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
-IPAddress gateway(192, 168, 2, 1);       // Gateway
-IPAddress subnet(255, 255, 255, 0);      // Subnet mask
-
-void AP_init() {
-  WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(local_IP, gateway, subnet);
-  WiFi.softAP(ssid);
-  WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
-
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
+  //----------------------------------------------------------------------
+  // HJS589 P10 FUNGSI TAMBAHAN UNTUK NODEMCU ESP8266
   
-  ArduinoOTA.setHostname(host);
-   ArduinoOTA.onStart([]() {
-    String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
-      type = "sketch";
-    } else {  // U_FS
-      type = "filesystem";
-    }
-
-    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-    Serial.println("Start updating " + type);
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
-  });
-  ArduinoOTA.begin();
+  void ICACHE_RAM_ATTR refresh() {
+    Disp.refresh();
+    timer0_write(ESP.getCycleCount() + 80000);
+  }
   
-  Serial.println("Server dimulai.");  
-}
+  void Disp_init_esp() {
+    Disp.start();
+    Disp.clear();
+    Disp.setBrightness(brightness);
+    Serial.println("Setup dmd selesai");
+  
+    noInterrupts();
+    timer0_isr_init();
+    timer0_attachInterrupt(refresh);
+    timer0_write(ESP.getCycleCount() + 80000);
+    interrupts();
+  }
+  
+  IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
+  IPAddress gateway(192, 168, 2, 1);       // Gateway
+  IPAddress subnet(255, 255, 255, 0);      // Subnet mask
+  
+  void AP_init() {
+    WiFi.mode(WIFI_AP);
+    WiFi.softAPConfig(local_IP, gateway, subnet);
+    WiFi.softAP(ssid);
+    WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
+  
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(myIP);
+    
+    ArduinoOTA.setHostname(host);
+     ArduinoOTA.onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH) {
+        type = "sketch";
+      } else {  // U_FS
+        type = "filesystem";
+      }
+  
+      // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+      Serial.println("Start updating " + type);
+    });
+    ArduinoOTA.onEnd([]() {
+      Serial.println("\nEnd");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) {
+        Serial.println("Auth Failed");
+      } else if (error == OTA_BEGIN_ERROR) {
+        Serial.println("Begin Failed");
+      } else if (error == OTA_CONNECT_ERROR) {
+        Serial.println("Connect Failed");
+      } else if (error == OTA_RECEIVE_ERROR) {
+        Serial.println("Receive Failed");
+      } else if (error == OTA_END_ERROR) {
+        Serial.println("End Failed");
+      }
+    });
+    ArduinoOTA.begin();
+    
+    Serial.println("Server dimulai.");  
+  }
 #else
   // =========================================
   // DMD3 P10 utility Function================
   // =========================================
-  void Disp_init() 
-   { 
+  void Disp_init_arduino() 
+    { 
       Disp.setDoubleBuffer(true);
       Timer1.initialize(1500);
       Timer1.attachInterrupt(scan);
@@ -258,7 +264,7 @@ void AP_init() {
       fType(1);  
       Disp.clear();
       Disp.swapBuffers();
-   }
+    }
 
   void setBrightness(int bright)
     { Timer1.pwm(9,bright);}
@@ -269,17 +275,53 @@ void AP_init() {
 #endif
 
 void setup() {
-  // put your setup code here, to run once:
+  Serial.begin(115200);
+  pinMode(BUZZ, OUTPUT); 
+
+  int rtn = I2C_ClearBus(); // clear the I2C bus first before calling Wire.begin()
+    if (rtn != 0) {
+      Serial.println(F("I2C bus error. Could not clear"));
+      if (rtn == 1) {
+        Serial.println(F("SCL clock line held low"));
+      } else if (rtn == 2) {
+        Serial.println(F("SCL clock line held low by slave clock stretch"));
+      } else if (rtn == 3) {
+        Serial.println(F("SDA data line held low"));
+      }
+    } 
+    else { // bus clear, re-enable Wire, now can start Wire Arduino master
+      Wire.begin();
+    }
+  
+  Rtc.Begin();
+  Rtc.Enable32kHzPin(false);
+  Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
+
+#if defined(ESP8266) || defined(ESP32)
+  Disp_init_esp();
+  AP_init();
+#else
+  Disp_init_arduino();
+#endif
+
+JadwalSholat();
+
+for(int i = 0; i < 4; i++)
+ {
+      Buzzer(1);
+      delay(80);
+      Buzzer(0);
+      delay(80);
+ }
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  
 
 }
 
 // PARAMETER PENGHITUNGAN JADWAL SHOLAT
-
 void JadwalSholat() {
   
   RtcDateTime now = Rtc.GetDateTime();
