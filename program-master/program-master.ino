@@ -322,10 +322,89 @@ void getData(){
             String key = input.substring(0, eq);
             String value = input.substring(eq + 1);
             
-            if (key == "setJam") jam = value;
-            else if (key == "tanggal") tanggal = value;
-            else if (key == "br") brightness = value.toInt();
-            else if (key == "text") text = value;
+            if (key == "Tm") {
+              String setJam = value;
+              RtcDateTime now = Rtc.GetDateTime();
+              uint8_t colon = value.indexOf(':');
+              uint8_t dash1 = value.indexOf('-');
+              uint8_t dash2 = value.indexOf('-', dash1 + 1);
+              uint8_t dash3 = value.indexOf('-', dash2 + 1);
+              
+              if (colon != -1 && dash1 != -1 && dash2 != -1 && dash3 != -1) {
+                  uint8_t jam = value.substring(0, colon).toInt();
+                  uint8_t menit = value.substring(colon + 1, dash1).toInt();
+                  uint8_t tanggal = value.substring(dash1 + 1, dash2).toInt();
+                  uint8_t bulan = value.substring(dash2 + 1, dash3).toInt();
+                  uint16_t tahun = value.substring(dash3 + 1).toInt();
+                  Rtc.SetDateTime(RtcDateTime(tahun, bulan, tanggal, jam, menit, now.Second()));
+              }
+              
+            }
+            
+            else if (key == "text") {
+              value.toCharArray(text,value.length()+1);
+              
+            }
+            else if (key == "Br") {
+              //brightness = value.toInt();
+              brightness = map(value.toInt(),0,100,10,255);
+            }
+            else if (key == "Sptx") {
+              //speedText1 = value.toInt();
+              speedText1 =  map(value.toInt(),0,100,10,80);
+            }
+            else if (key == "Spdt") {
+              //speedDate = value.toInt();
+              speedDate =  map(value.toInt(),0,100,10,80);
+            }
+            else if (key == "Lk") {
+              parsingData(value);
+            }
+            else if (key == "Iq") {
+              // Mencari posisi tanda "-"
+              int separatorIndex = value.indexOf('-');
+           
+              // Memisahkan angka pertama
+              int indexSholat = value.substring(0, separatorIndex).toInt();
+           
+              // Memisahkan angka kedua
+              int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
+              iqomah[indexSholat]=indexKoreksi;
+            }
+            else if (key == "Dy") {
+              // Mencari posisi tanda "-"
+              int separatorIndex = value.indexOf('-');
+           
+              // Memisahkan angka pertama
+              int indexSholat = value.substring(0, separatorIndex).toInt();
+           
+              // Memisahkan angka kedua
+              int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
+              displayBlink[indexSholat]=indexKoreksi;
+            }
+            else if (key == "Kr") {
+              // Mencari posisi tanda "-"
+              int separatorIndex = value.indexOf('-');
+           
+              // Memisahkan angka pertama
+              int indexSholat = value.substring(0, separatorIndex).toInt();
+           
+              // Memisahkan angka kedua
+              int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
+              dataIhty[indexSholat]=indexKoreksi;
+            }
+            else if (key == "Bzr") {
+              stateBuzzer = value.toInt();
+            }
+            else if (key == "newPassword"){
+              if(value.length()==8){
+                //Serial.println(String()+"newPassword:"+newPassword);
+                value.toCharArray(password, value.length() + 1); // Set password baru
+                //saveStringToEEPROM(56, password); // Simpan password AP
+                server.send(200, "text/plain", "Password WiFi diupdate");
+              }
+            }
+           
         }
         
     }
@@ -440,3 +519,49 @@ void Buzzer(uint8_t state)
       break;
     };
   }
+
+  void parsingData(String data){
+  // Data string
+  //String data = "0.1234-111.2345-7";
+  
+  char charData[20]; 
+  data.toCharArray(charData, sizeof(charData));
+
+  // Buffer untuk strtok_r()
+  char *token;
+  char *savePtr;
+
+  // Array penyimpanan angka
+  float angkaFloat[10];
+  int angkaInt[10];
+  int indexFloat = 0, indexInt = 0;
+
+  // Mulai parsing pertama
+  token = strtok_r(charData, "-", &savePtr);
+
+  while (token != NULL) { // Menggunakan while karena hanya dijalankan sekali
+    Serial.print("Nilai ditemukan: ");
+    Serial.println(token);
+
+    // Cek apakah token mengandung titik (float) atau tidak (int)
+    if (strchr(token, '.') != NULL) {
+      dataFloat[indexFloat] = atof(token);
+//      Serial.print("Disimpan sebagai float: ");
+//      Serial.println(dataFloat[indexFloat], 5);
+      config.latitude = dataFloat[0];
+      config.longitude = dataFloat[1];
+      indexFloat++;
+    } else {
+      dataInteger[indexInt] = atoi(token);
+//      Serial.print("Disimpan sebagai int: ");
+//      Serial.println(dataInteger[indexInt]);
+      config.zonawaktu = dataInteger[0];
+      indexInt++;
+    }
+
+    // Ambil nilai berikutnya
+    token = strtok_r(NULL, "-", &savePtr);
+  }
+
+  //Serial.println("\nParsing selesai di proses()");
+}

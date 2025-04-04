@@ -93,6 +93,13 @@ void handleSetTime() {
    // server.send(200, "text/plain", "Settingan jam berhasil diupdate");
   } 
 
+  if (server.hasArg("Tgl")) {//jam
+    String setJam = server.arg("Tgl"); 
+    Serial.println("Tgl=" + setJam);
+    
+   // server.send(200, "text/plain", "Settingan jam berhasil diupdate");
+  } 
+
   if (server.hasArg("text")) {
     String setText = server.arg("text"); 
     Serial.println("text=" + setText);
@@ -102,39 +109,39 @@ void handleSetTime() {
   }
   
  if (server.hasArg("Br")) {
-   uint8_t input  = server.arg("Br").toInt(); 
-   uint8_t brightness = map(input,0,100,10,255);
-   Serial.println("Br="+String(brightness));
+   String input  = server.arg("Br"); 
+   //uint8_t brightness = map(input,0,100,10,255);
+   Serial.println("Br="+input);
 
    server.send(200, "text/plain", "Kecerahan berhasil diupdate");
  }
  
  if (server.hasArg("Sptx")) {
-   uint8_t input = server.arg("Sptx").toInt(); // Atur kecepatan text
-   uint8_t speedText =  map(input,0,100,10,80);
+   String input = server.arg("Sptx"); // Atur kecepatan text
+   //uint8_t speedText =  map(input,0,100,10,80);
 
-   Serial.println("Sptx="+String(speedText));
+   Serial.println("Sptx="+input);
    //EEPROM.put(8, speedText);
    server.send(200, "text/plain", "Kecepatan nama berhasil diupdate");
  }
 
  if (server.hasArg("Spdt")) {
-   uint8_t input = server.arg("Spdt").toInt(); // Atur kecepatan text
-   uint8_t speedDate =  map(input,0,100,10,80);
-   Serial.println("Spdt="+String(speedDate));
+   String input = server.arg("Spdt"); // Atur kecepatan text
+   //uint8_t speedDate =  map(input,0,100,10,80);
+   Serial.println("Spdt="+input);
    //EEPROM.put(8, speedDate);
    server.send(200, "text/plain", "Kecepatan tanggal berhasil diupdate");
  }
 
  if (server.hasArg("Lk")) {
    String data = server.arg("Lk"); 
-   Serial.print("Lk="+String(data));
+   Serial.print("Lk="+data);
    //parsingData(data);
    //flag=1;
  }
 
  if (server.hasArg("Iq")) { //iqomah
-   uint8_t data = server.arg("Iq").toInt(); 
+   String data = server.arg("Iq"); 
   //   // Mencari posisi tanda "-"
   //  int separatorIndex = data.indexOf('-');
 
@@ -144,11 +151,11 @@ void handleSetTime() {
   //  // Memisahkan angka kedua
   //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
   //  iqomah[indexSholat]=indexKoreksi;
-   Serial.println("Iq=" + String(data));
+   Serial.println("Iq=" + data);
  }           
 
  if (server.hasArg("Dy")) { //display off
-   uint8_t data = server.arg("Dy").toInt(); ; 
+   String data = server.arg("Dy"); 
     // Mencari posisi tanda "-"
   //  int separatorIndex = data.indexOf('-');
 
@@ -158,11 +165,11 @@ void handleSetTime() {
   //  // Memisahkan angka kedua
   //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
   //  displayBlink[indexSholat]=indexKoreksi;
-   Serial.println("Dy=" + String(data));
+   Serial.println("Dy=" + data);
  }        
 
  if (server.hasArg("Kr")) { //koreksi jadwal
-   uint8_t data = server.arg("Kr").toInt(); ; 
+   String data = server.arg("Kr"); 
   //   // Mencari posisi tanda "-"
   //  int separatorIndex = data.indexOf('-');
 
@@ -172,21 +179,18 @@ void handleSetTime() {
   //  // Memisahkan angka kedua
   //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
   //  dataIhty[indexSholat]=indexKoreksi;
-   Serial.println("Kr=" + String(data));
+   Serial.println("Kr=" + data);
  }        
 
  
  
  if (server.hasArg("Bzr")) {
-   uint8_t stateBuzzer = server.arg("Bzr").toInt(); // Atur status buzzer
-   Serial.println("Bzr="+String(stateBuzzer));
+   String stateBuzzer = server.arg("Bzr"); // Atur status buzzer
+   Serial.println("Bzr="+stateBuzzer);
    //EEPROM.put(52, stateBuzzer);
    //server.send(200, "text/plain", (stateBuzzer)?"Suara Diaktifkan":"Suara Dimatikan");
  }
 
- if (server.hasArg("status")) {
-   server.send(200, "text/plain", "CONNECTED");
- }
 ///////////////
  if (server.hasArg("newPassword")) {
    String newPassword = server.arg("newPassword");
@@ -195,7 +199,7 @@ void handleSetTime() {
      newPassword.toCharArray(password, newPassword.length() + 1); // Set password baru
      //saveStringToEEPROM(56, password); // Simpan password AP
      server.send(200, "text/plain", "Password WiFi diupdate");
-   }else{ Buzzer(2); Serial.println("panjang password melebihi 8 karakter"); }
+   }//else{  Serial.println("panjang password melebihi 8 karakter"); }
   } 
    //write the data to EEPROM
   boolean ok1 = EEPROM.commit();
