@@ -28,6 +28,7 @@
   #include <DMD3asis.h>
   #include <avr/pgmspace.h>
   #include <MemoryFree.h>
+  #include <EEPROM.h>
   
   DMD3 Disp(DISPLAYS_WIDE,DISPLAYS_HIGH);
   
@@ -180,6 +181,7 @@ Show show = ANIM_JAM;
   }
   
   void Disp_init_esp() {
+    EEPROM.begin(EEPROM_SIZE);
     Disp.start();
     Disp.clear();
     Disp.setBrightness(brightness);
@@ -197,6 +199,7 @@ Show show = ANIM_JAM;
   IPAddress subnet(255, 255, 255, 0);      // Subnet mask
   
   void AP_init() {
+    
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.softAP(ssid);
@@ -319,97 +322,99 @@ void getData(){
         
         int eq = input.indexOf('=');
         if (eq != -1) {
-            String key = input.substring(0, eq);
-            String value = input.substring(eq + 1);
+          String key = input.substring(0, eq);
+          String value = input.substring(eq + 1);
+          
+          if (key == "Tm") {
+            String setJam = value;
+            RtcDateTime now = Rtc.GetDateTime();
+            uint8_t colon = value.indexOf(':');
+            uint8_t dash1 = value.indexOf('-');
+            uint8_t dash2 = value.indexOf('-', dash1 + 1);
+            uint8_t dash3 = value.indexOf('-', dash2 + 1);
             
-            if (key == "Tm") {
-              String setJam = value;
-              RtcDateTime now = Rtc.GetDateTime();
-              uint8_t colon = value.indexOf(':');
-              uint8_t dash1 = value.indexOf('-');
-              uint8_t dash2 = value.indexOf('-', dash1 + 1);
-              uint8_t dash3 = value.indexOf('-', dash2 + 1);
-              
-              if (colon != -1 && dash1 != -1 && dash2 != -1 && dash3 != -1) {
-                  uint8_t jam = value.substring(0, colon).toInt();
-                  uint8_t menit = value.substring(colon + 1, dash1).toInt();
-                  uint8_t tanggal = value.substring(dash1 + 1, dash2).toInt();
-                  uint8_t bulan = value.substring(dash2 + 1, dash3).toInt();
-                  uint16_t tahun = value.substring(dash3 + 1).toInt();
-                  Rtc.SetDateTime(RtcDateTime(tahun, bulan, tanggal, jam, menit, now.Second()));
-              }
-              
+            if (colon != -1 && dash1 != -1 && dash2 != -1 && dash3 != -1) {
+              uint8_t jam = value.substring(0, colon).toInt();
+              uint8_t menit = value.substring(colon + 1, dash1).toInt();
+              uint8_t tanggal = value.substring(dash1 + 1, dash2).toInt();
+              uint8_t bulan = value.substring(dash2 + 1, dash3).toInt();
+              uint16_t tahun = value.substring(dash3 + 1).toInt();
+              Rtc.SetDateTime(RtcDateTime(tahun, bulan, tanggal, jam, menit, now.Second()));
             }
             
-            else if (key == "text") {
-              value.toCharArray(text,value.length()+1);
-              
+          }
+          
+          else if (key == "text") {
+            value.toCharArray(text,value.length()+1);
+          }
+
+          else if (key == "Br") {
+            brightness = map(value.toInt(),0,100,10,255);
+          }
+
+          else if (key == "Sptx") {
+            speedText1 =  map(value.toInt(),0,100,10,80);
+          }
+
+          else if (key == "Spdt") {
+            speedDate =  map(value.toInt(),0,100,10,80);
+          }
+
+          else if (key == "Lk") {
+            parsingData(value);
+          }
+
+          else if (key == "Iq") {
+            // Mencari posisi tanda "-"
+            int separatorIndex = value.indexOf('-');
+          
+            // Memisahkan angka pertama
+            int indexSholat = value.substring(0, separatorIndex).toInt();
+          
+            // Memisahkan angka kedua
+            int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
+            iqomah[indexSholat]=indexKoreksi;
+          }
+
+          else if (key == "Dy") {
+            // Mencari posisi tanda "-"
+            int separatorIndex = value.indexOf('-');
+          
+            // Memisahkan angka pertama
+            int indexSholat = value.substring(0, separatorIndex).toInt();
+          
+            // Memisahkan angka kedua
+            int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
+            displayBlink[indexSholat]=indexKoreksi;
+          }
+
+          else if (key == "Kr") {
+            // Mencari posisi tanda "-"
+            int separatorIndex = value.indexOf('-');
+          
+            // Memisahkan angka pertama
+            int indexSholat = value.substring(0, separatorIndex).toInt();
+          
+            // Memisahkan angka kedua
+            int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
+            dataIhty[indexSholat]=indexKoreksi;
+          }
+
+          else if (key == "Bzr") {
+            stateBuzzer = value.toInt();
+          }
+
+          else if (key == "newPassword"){
+            if(value.length()==8){
+              //Serial.println(String()+"newPassword:"+newPassword);
+              value.toCharArray(password, value.length() + 1); // Set password baru
+              //saveStringToEEPROM(56, password); // Simpan password AP
+              server.send(200, "text/plain", "Password WiFi diupdate");
             }
-            else if (key == "Br") {
-              //brightness = value.toInt();
-              brightness = map(value.toInt(),0,100,10,255);
-            }
-            else if (key == "Sptx") {
-              //speedText1 = value.toInt();
-              speedText1 =  map(value.toInt(),0,100,10,80);
-            }
-            else if (key == "Spdt") {
-              //speedDate = value.toInt();
-              speedDate =  map(value.toInt(),0,100,10,80);
-            }
-            else if (key == "Lk") {
-              parsingData(value);
-            }
-            else if (key == "Iq") {
-              // Mencari posisi tanda "-"
-              int separatorIndex = value.indexOf('-');
-           
-              // Memisahkan angka pertama
-              int indexSholat = value.substring(0, separatorIndex).toInt();
-           
-              // Memisahkan angka kedua
-              int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
-              iqomah[indexSholat]=indexKoreksi;
-            }
-            else if (key == "Dy") {
-              // Mencari posisi tanda "-"
-              int separatorIndex = value.indexOf('-');
-           
-              // Memisahkan angka pertama
-              int indexSholat = value.substring(0, separatorIndex).toInt();
-           
-              // Memisahkan angka kedua
-              int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
-              displayBlink[indexSholat]=indexKoreksi;
-            }
-            else if (key == "Kr") {
-              // Mencari posisi tanda "-"
-              int separatorIndex = value.indexOf('-');
-           
-              // Memisahkan angka pertama
-              int indexSholat = value.substring(0, separatorIndex).toInt();
-           
-              // Memisahkan angka kedua
-              int indexKoreksi = value.substring(separatorIndex + 1).toInt();  
-              dataIhty[indexSholat]=indexKoreksi;
-            }
-            else if (key == "Bzr") {
-              stateBuzzer = value.toInt();
-            }
-            else if (key == "newPassword"){
-              if(value.length()==8){
-                //Serial.println(String()+"newPassword:"+newPassword);
-                value.toCharArray(password, value.length() + 1); // Set password baru
-                //saveStringToEEPROM(56, password); // Simpan password AP
-                server.send(200, "text/plain", "Password WiFi diupdate");
-              }
-            }
-           
+          }
         }
-        
     }
 }
-
 
 // PARAMETER PENGHITUNGAN JADWAL SHOLAT
 void JadwalSholat() {

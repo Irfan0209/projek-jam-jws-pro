@@ -19,7 +19,7 @@ DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan 
 // Pengaturan hotspot WiFi dari ESP8266
 char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
 char password[20] = "00000000";
-const char* host = "OTA-PANEL";
+const char* host = "REMOTE_PANEL";
 
 ESP8266WebServer server(80);
 
@@ -89,37 +89,30 @@ void handleSetTime() {
   if (server.hasArg("Tm")) {//jam
     String setJam = server.arg("Tm"); 
     Serial.println("Tm=" + setJam);
-    
-   // server.send(200, "text/plain", "Settingan jam berhasil diupdate");
+    server.send(200, "text/plain", "Settingan jam berhasil diupdate");
   } 
 
   if (server.hasArg("Tgl")) {//jam
-    String setJam = server.arg("Tgl"); 
-    Serial.println("Tgl=" + setJam);
-    
-   // server.send(200, "text/plain", "Settingan jam berhasil diupdate");
+    String setDate = server.arg("Tgl"); 
+    Serial.println("Tgl=" + setDate);
+    server.send(200, "text/plain", "Settingan jam berhasil diupdate");
   } 
 
   if (server.hasArg("text")) {
     String setText = server.arg("text"); 
     Serial.println("text=" + setText);
-
     //saveStringToEEPROM(66, dynamicText);
-   // server.send(200, "text/plain", "Settingan nama berhasil diupdate");
+    server.send(200, "text/plain", "Settingan nama berhasil diupdate");
   }
   
  if (server.hasArg("Br")) {
    String input  = server.arg("Br"); 
-   //uint8_t brightness = map(input,0,100,10,255);
    Serial.println("Br="+input);
-
    server.send(200, "text/plain", "Kecerahan berhasil diupdate");
  }
  
  if (server.hasArg("Sptx")) {
    String input = server.arg("Sptx"); // Atur kecepatan text
-   //uint8_t speedText =  map(input,0,100,10,80);
-
    Serial.println("Sptx="+input);
    //EEPROM.put(8, speedText);
    server.send(200, "text/plain", "Kecepatan nama berhasil diupdate");
@@ -127,7 +120,6 @@ void handleSetTime() {
 
  if (server.hasArg("Spdt")) {
    String input = server.arg("Spdt"); // Atur kecepatan text
-   //uint8_t speedDate =  map(input,0,100,10,80);
    Serial.println("Spdt="+input);
    //EEPROM.put(8, speedDate);
    server.send(200, "text/plain", "Kecepatan tanggal berhasil diupdate");
@@ -137,58 +129,28 @@ void handleSetTime() {
    String data = server.arg("Lk"); 
    Serial.print("Lk="+data);
    //parsingData(data);
-   //flag=1;
  }
 
  if (server.hasArg("Iq")) { //iqomah
    String data = server.arg("Iq"); 
-  //   // Mencari posisi tanda "-"
-  //  int separatorIndex = data.indexOf('-');
-
-  //  // Memisahkan angka pertama
-  //  int indexSholat = data.substring(0, separatorIndex).toInt();
-
-  //  // Memisahkan angka kedua
-  //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
-  //  iqomah[indexSholat]=indexKoreksi;
    Serial.println("Iq=" + data);
  }           
 
  if (server.hasArg("Dy")) { //display off
    String data = server.arg("Dy"); 
-    // Mencari posisi tanda "-"
-  //  int separatorIndex = data.indexOf('-');
-
-  //  // Memisahkan angka pertama
-  //  int indexSholat = data.substring(0, separatorIndex).toInt();
-
-  //  // Memisahkan angka kedua
-  //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
-  //  displayBlink[indexSholat]=indexKoreksi;
    Serial.println("Dy=" + data);
  }        
 
  if (server.hasArg("Kr")) { //koreksi jadwal
    String data = server.arg("Kr"); 
-  //   // Mencari posisi tanda "-"
-  //  int separatorIndex = data.indexOf('-');
-
-  //  // Memisahkan angka pertama
-  //  int indexSholat = data.substring(0, separatorIndex).toInt();
-
-  //  // Memisahkan angka kedua
-  //  int indexKoreksi = data.substring(separatorIndex + 1).toInt();  
-  //  dataIhty[indexSholat]=indexKoreksi;
    Serial.println("Kr=" + data);
  }        
-
- 
  
  if (server.hasArg("Bzr")) {
    String stateBuzzer = server.arg("Bzr"); // Atur status buzzer
    Serial.println("Bzr="+stateBuzzer);
    //EEPROM.put(52, stateBuzzer);
-   //server.send(200, "text/plain", (stateBuzzer)?"Suara Diaktifkan":"Suara Dimatikan");
+   server.send(200, "text/plain", (stateBuzzer.toInt())?"Suara Diaktifkan":"Suara Dimatikan");
  }
 
 ///////////////
